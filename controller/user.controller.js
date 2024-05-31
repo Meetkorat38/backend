@@ -1,60 +1,96 @@
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import {
+  signinValidationSchema,
+  userValidationSchema,
+} from "../utils/userValidator.js";
 
 const signupHandler = async (req, res) => {
-  const body = req.body;
+  try {
+    const body = req.body;
 
-  if (!body) {
-    return res.status(401).json({
-      message: "Invalid request",
+    if (!body) {
+      return res.status(401).json({
+        message: "Invalid request",
+      });
+    }
+
+    const validatorSchema = userValidationSchema.safeParse(body);
+
+    const { success } = validatorSchema;
+
+    if (!success) {
+      return res.status(401).json({
+        message: "Parse the all request fields",
+        error: validatorSchema.error,
+      });
+    }
+
+    const { firstname, lastname, email, mobilenumber, skypeID, password } =
+      validatorSchema.data;
+
+    //   If user already exists then login
+
+    console.log("control reached here\n");
+    const userExist = await User.findOne({
+      email,
+      mobilenumber,
     });
-  }
 
-  const { firstname, lastname, email, mobilenumber, skypeID, password } = body;
+    if (userExist) {
+      return res.status(200).json({
+        message: "User already exists",
+      });
+    }
 
-  if (!(firstname && lastname && email && mobilenumber && password)) {
-    return res.status(403).json({
-      message: "Field cant be empty",
+    console.log("control reached here : 2\n");
+
+    const user = await User.create({
+      firstname,
+      lastname,
+      email,
+      mobilenumber,
+      skypeID,
+      password,
     });
-  }
 
-  //   If user already exists then login
+    console.log("control reached here : 3\n");
 
-  const userExist = await User.findOne({
-    email,
-    mobilenumber,
-  });
+    if (!user) {
+      return res.status(401).json({
+        message: "User creation failed",
+      });
+    }
 
-  if (userExist) {
+    console.log("control reached here : 4\n");
+
     return res.status(200).json({
-      message: "User already exists",
+      message: "User created successfully",
+      user,
+    });
+  } catch (error) {
+    console.log("control reached in catch block here\n");
+
+    return res.status(500).json({
+      message: error.message || "User creation failed",
     });
   }
-
-  const user = await User.create({
-    firstname,
-    lastname,
-    email,
-    mobilenumber,
-    skypeID,
-    password,
-  });
-
-  if (!user) {
-    return res.status(401).json({
-      message: "User creation failed",
-    });
-  }
-
-  return res.status(200).json({
-    message: "User created successfully",
-    user,
-  });
 };
 
 const loginHandler = async (req, res) => {
   // Email and password are required
-  const { username, password, mobilenumber } = req.body;
+
+  const signinValidator = signinValidationSchema.safeParse(req.body);
+
+  const { success } = signinValidator;
+
+  if (!success) {
+    return res.status(401).json({
+      message: "Parse all required fields",
+    });
+  }
+
+  const { username, password } = signinValidator.data;
 
   if (!username || !password) {
     return res.status(403).json({
