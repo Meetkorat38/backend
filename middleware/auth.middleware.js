@@ -52,4 +52,32 @@ const auth = async (req, res, next) => {
   }
 };
 
-export { auth };
+const isAdmin = async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(403).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    const admin = await User.findOne({
+      isAdmin: true,
+    }).select("-password");
+
+    if (!admin) {
+      return res.status(403).json({
+        message: "Invalid authorization",
+      });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export { auth, isAdmin };

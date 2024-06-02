@@ -26,8 +26,15 @@ const signupHandler = async (req, res) => {
       });
     }
 
-    const { firstname, lastname, email, mobilenumber, skypeID, password } =
-      validatorSchema.data;
+    const {
+      firstname,
+      lastname,
+      email,
+      mobilenumber,
+      skypeID,
+      password,
+      isAdmin,
+    } = validatorSchema.data;
 
     //   If user already exists then login
 
@@ -52,6 +59,7 @@ const signupHandler = async (req, res) => {
       mobilenumber,
       skypeID,
       password,
+      isAdmin,
     });
 
     console.log("control reached here : 3\n");
@@ -153,4 +161,35 @@ const meHandler = async (req, res) => {
   });
 };
 
-export { signupHandler, loginHandler, meHandler };
+const getAllUsers = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User is not logged in",
+      });
+    }
+
+    const allUsers = await User.find({
+      isAdmin: false,
+    });
+
+    if (!allUsers) {
+      return res.status(401).json({
+        message: "Cant get all users from the database",
+      });
+    }
+
+    return res.status(200).json({
+      message: "All users gettes successfully",
+      allUsers,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message || "Intrenal server error",
+    });
+  }
+};
+
+export { signupHandler, loginHandler, meHandler, getAllUsers };
