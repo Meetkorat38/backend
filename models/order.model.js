@@ -26,6 +26,7 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
     address: {
+      // 🟠 create schema for address
       type: String,
       required: true,
     },
