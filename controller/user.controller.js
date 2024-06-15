@@ -17,12 +17,11 @@ const signupHandler = async (req, res) => {
 
     const validatorSchema = userValidationSchema.safeParse(body);
 
-    const { success } = validatorSchema;
+    const { success, error } = validatorSchema;
 
     if (!success) {
       return res.status(401).json({
-        message: "Parse the all request fields",
-        error: validatorSchema.error,
+        message: error.issues[0].message || "Parse the all request fields",
       });
     }
 
@@ -38,7 +37,6 @@ const signupHandler = async (req, res) => {
 
     //   If user already exists then login
 
-    console.log("control reached here\n");
     const userExist = await User.findOne({
       email,
       mobilenumber,
@@ -77,8 +75,6 @@ const signupHandler = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.log("control reached in catch block here\n");
-
     return res.status(500).json({
       message: error.message || "User creation failed",
     });

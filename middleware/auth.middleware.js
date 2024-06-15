@@ -47,14 +47,18 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(404);
-    throw new Error(error.message || "wrong credentials");
+    return res.status(404).json({
+      message: error.message || "wrong credentials",
+    });
   }
 };
 
 const isAdmin = async (req, res, next) => {
+  // For admin credentials
+
+  // For most applications use the admin credentials
   try {
-    const user = req.user;
+    const user = await req.user;
 
     if (!user) {
       return res.status(403).json({
@@ -68,7 +72,7 @@ const isAdmin = async (req, res, next) => {
 
     if (!admin) {
       return res.status(403).json({
-        message: "Invalid authorization",
+        message: "Invalid authorization for accessing the admin account!",
       });
     }
 
